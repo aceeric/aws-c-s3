@@ -82,7 +82,6 @@ typedef int(aws_s3_meta_request_headers_callback_fn)(
  * Return AWS_OP_ERR to indicate failure and cancel the request.
  */
 typedef int(aws_s3_meta_request_receive_body_callback_fn)(
-
     /* The meta request that the callback is being issued for. */
     struct aws_s3_meta_request *meta_request,
 
@@ -102,26 +101,6 @@ typedef int(aws_s3_meta_request_receive_body_callback_fn)(
 typedef void(aws_s3_meta_request_finish_fn)(
     struct aws_s3_meta_request *meta_request,
     const struct aws_s3_meta_request_result *meta_request_result,
-    void *user_data);
-
-/**
- * Information sent in the meta_request progress callback.
- */
-struct aws_s3_meta_request_progress {
-
-    /* Bytes transferred since the previous progress update */
-    uint64_t bytes_transferred;
-
-    /* Length of the entire meta request operation */
-    uint64_t content_length;
-};
-
-/**
- * Invoked to report progress of multi-part upload and copy object requests.
- */
-typedef void(aws_s3_meta_request_progress_fn)(
-    struct aws_s3_meta_request *meta_request,
-    const struct aws_s3_meta_request_progress *progress,
     void *user_data);
 
 typedef void(aws_s3_meta_request_shutdown_fn)(void *user_data);
@@ -229,12 +208,13 @@ struct aws_s3_meta_request_options {
     aws_s3_meta_request_shutdown_fn *shutdown_callback;
 
     /**
-     * Invoked to report progress of the meta request execution.
-     * Currently, the progress callback is invoked only for the CopyObject meta request type.
-     * TODO: support this callback for all the types of meta requests
-     * See `aws_s3_meta_request_progress_fn`
+     * If true, use https - either with a CRT-generated TLS context - or with an
+     * explicit context provided by the CRT caller. If false, use http.
      */
-    aws_s3_meta_request_progress_fn *progress_callback;
+    bool use_tls;
+
+    /* HTTP port override. If -1, determine port based on TLS context */
+    int port;
 };
 
 /* Result details of a meta request.
